@@ -14,7 +14,7 @@ async function runFlake8() {
       },
     }
   };
-  await exec.exec('flake8 --exit-zero', [], options);
+  await exec.exec("/bin/bash -c \"git diff refs/heads/main -U0 | flake8 --diff --exit-zero --config .flake8 \"", [], options);
   return myOutput;
 }
 
