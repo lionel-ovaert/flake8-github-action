@@ -63,17 +63,46 @@ async function createCheck(check_name: string, title: string, annotations: Annot
     ref: github.context.sha
   });
 
-  const check_run_id = res.data.check_runs[0].id;
+  let summary = `${annotations.length} errors(s) found`;
+  if (annotations.length > 50) {
+    summary = `${annotations.length} errors(s) found (first 50 shown)`;
+    annotations = annotations.slice(0, 50);
+  }
+  const output = {
+    title,
+    summary,
+    annotations,
+  };
 
-  await octokit.checks.update({
-    ...github.context.repo,
-    check_run_id,
-    output: {
-      title,
-      summary: `${annotations.length} errors(s) found`,
-      annotations
-    }
-  });
+  if (res.data.check_runs.length === 0) {
+    await octokit.checks.create({
+      ...github.context.repo,
+      name: check_name,
+      head_sha: github.context.sha,
+      status: "completed",
+      conclusion: "failure",
+      output
+    });
+  } else {
+    const check_run_id = res.data.check_runs[0].id;
+    await octokit.checks.update({
+      ...github.context.repo,
+      check_run_id,
+      output
+    });
+  }
+
+  // const check_run_id = res.data.check_runs[0].id;
+
+  // await octokit.checks.update({
+  //   ...github.context.repo,
+  //   check_run_id,
+  //   output: {
+  //     title,
+  //     summary: `${annotations.length} errors(s) found`,
+  //     annotations
+  //   }
+  // });
 }
 
 async function run() {
